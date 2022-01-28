@@ -1,15 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import { coins } from '../static/coins'
 import Coin from './Coin';
 import BalanceChart from './BalanceChart';
+import { ThirdwebSDK } from '@3rdweb/sdk'
+import { ethers } from 'ethers'
+
+const sdk = new ThirdwebSDK(
+    new ethers.Wallet(
+        process.env.NEXT_PUBLIC_METAMASK_KEY,
+        ethers.getDefaultProvider(
+            'https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+        )
+    )
+)
+
 
 const Portfolio = () => {
+    const [sanityTokens, setSanityTokens] = useState([])
+    useEffect(() => {
+        const getCoins = async () => {
+            try {
+                const coins = await fetch("https://4q70y2pz.api.sanity.io/v1/data/query/production?query=*%5B_type%3D%3D%20'coins'%5D%20%7B%0A%20%20name%2C%0A%20%20usdPrice%2C%0A%20%20contactAddress%2C%0A%20%20symbol%2C%0A%20%20logo%2C%0A%7D")
+                const tempSanityTokens = await coins.json()
+                console.log(tempSanityTokens)
+                setSanityTokens(tempSanityTokens.result)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        return getCoins()
+    }, [])
+
     return (
         <Wrapper>
             <Content>
-                <BalanceChart />
+                <Chart>
+                    <div>
+                        <Balance>
+                            <BalanceTitle>Portfolio Balance</BalanceTitle>
+                            <BalanceValue>
+                                {'$'}
+                                {/* {walletBalance.toLocaleString()} */}
+                                46,000
+                            </BalanceValue>
+                        </Balance>
+                    </div>
+                    <BalanceChart />
+                </Chart>
                 <PortfolioTable>
                     <TableItem>
                         <Title>Your Assets</Title>
@@ -50,6 +90,23 @@ const Content = styled.div`
     width: 100%;
     max-width: 1000px;
     padding: 2rem 1rem;
+`
+const Chart = styled.div`
+    border: 1px solid #282b2f;
+    padding: 1rem 2rem;
+`
+
+const Balance = styled.div``
+
+const BalanceTitle = styled.div`
+    color: #8a919e;
+    font-size: 0.9rem;
+`
+
+const BalanceValue = styled.div`
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
 `
 
 const PortfolioTable = styled.div`
