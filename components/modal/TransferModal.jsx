@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components'
+import CoinSelector from './CoinSelector';
 import Transfer from './Transfer';
 
 
-const TransferModal = () => {
+const TransferModal = ({ sanityTokens, thirdWebTokens, walletAddress }) => {
     const [action, setAction] = useState('send')
+    const [selectedToken, setSelectedToken] = useState(sanityTokens[1])
 
     const selectedStyle = {
         color: '#3773f5'
@@ -17,9 +19,23 @@ const TransferModal = () => {
     const selectedModal = (option) => {
         switch (option) {
             case 'send':
-                return <Transfer />
+                return <Transfer
+                    selectedToken={selectedToken}
+                    setAciton={setAction}
+                    thirdWebTokens={thirdWebTokens}
+                    walletAddress={walletAddress}
+                />
             case 'recieve':
                 return <h2>recieve</h2>
+            case 'select':
+                return <CoinSelector
+                    setAction={setAction}
+                    selectedToken={selectedToken}
+                    setSelectedToken={selectedToken}
+                    sanityTokens={sanityTokens}
+                    thirdWebTokens={thirdWebTokens}
+                    walletAddress={walletAddress}
+                />
             default:
                 return <h2>send</h2>
         }

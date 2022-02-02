@@ -1,11 +1,50 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components'
 import { FaWallet } from 'react-icons/fa'
+import imgUrlBuilder from '@sanity/image-url'
+import { client } from '../../lib/sanity'
 
-
-const Transfer = () => {
+const Transfer = ({ selectedToken, setAction, thirdWebTokens, walletAddress }) => {
     const [amount, setAmount] = useState()
     const [recipient, setRecipient] = useState('')
+    const [imageUrl, setImageUrl] = useState(null)
+    const [activeThirdWebToken, setActiveThirdWebToken] = useState()
+    const [balance, setBalance] = useState('Fetching...')
+
+    useEffect(() => {
+        const activeToken = thirdWebTokens.find(token => token.address === selectedToken.contactAddress)
+
+        setActiveThirdWebToken(activeToken)
+    }, [thirdWebTokens, selectedToken])
+
+    useEffect(() => {
+        const url = imgUrlBuilder(client).image(selectedToken.logo).url()
+        setImageUrl(url)
+    }, [selectedToken])
+
+    useEffect(() => {
+        const getBalance = async () => {
+            const balance = await activeThirdWebToken.balanceOf(walletAddress)
+            setBalance(balance.displayValue)
+        }
+
+        if (activeThirdWebToken) {
+            getBalance()
+        }
+    }, [activeThirdWebToken])
+
+    const sendCrypto = async (amount, recipient) => {
+
+        if (activeThirdWebToken && amount && recipient) {
+            const tx = await activeThirdWebToken.transfer(
+                recipient,
+                amount.toString().concat('000000000000000000')
+            )
+            setActive('transferred')
+        } else {
+            console.error('missing data')
+        }
+    }
 
     return (
         <Wrapper>
@@ -36,20 +75,20 @@ const Transfer = () => {
                 <Divider />
                 <Row>
                     <FieldName>Pay with</FieldName>
-                    <CoinSelectList>
+                    <CoinSelectList onClick={() => setAction('select')}>
                         <Icon>
-                            <img src='https://eric7398.github.io/assets/Portrait.png' alt='' />
+                            <img src={imageUrl} alt='' />
                         </Icon>
-                        <CoinName>Ethereum</CoinName>
+                        <CoinName>{selectedToken.name}</CoinName>
                     </CoinSelectList>
                 </Row>
             </TransferForm>
             <Row>
-                <Continue>Continue</Continue>
+                <Continue onClick={() => sendCrypto(amount, recipient)}>Continue</Continue>
             </Row>
             <Row>
-                <BalanceTitle>ETH Balance</BalanceTitle>
-                <Balance>1.2 ETH</Balance>
+                <BalanceTitle>{selectedToken.symbol} Balance</BalanceTitle>
+                <Balance>{balance} {selectedToken.symbol}</Balance>
             </Row>
         </Wrapper>
     );
